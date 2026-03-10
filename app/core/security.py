@@ -2,8 +2,10 @@ import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 
-# 🌟 你的 SaaS 终极密钥（在生产环境中必须放入 .env 环境变量中绝对保密！）
-SECRET_KEY = "PV_ESS_MASTER_SUPER_SECRET_KEY_2026"
+# 🌟 从中央配置库安全引入门禁密钥
+from app.core.config import SECRET_KEY
+
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 门禁卡有效期：7天 (方便销售出差不用天天登录)
 

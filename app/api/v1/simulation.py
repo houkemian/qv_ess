@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException # 引入 Depends
+from fastapi import APIRouter, Depends, HTTPException, requests # 引入 Depends
 from pydantic import BaseModel
 import time
+import traceback
 
 from app.engine.schemas import SimulationInput, SimulationOutput
 from app.engine.finance import FinancialInput, FinancialOutput, run_financial_simulation
@@ -100,6 +101,8 @@ async def simulate_pv_ess_project(
         avoided_loss_kwh = total_potential_loss - actual_loss
         backup_revenue = avoided_loss_kwh * request.financial_params.voll_price
 
+
+
         # 4. 运行金融引擎
         fin_input = FinancialInput(
             first_year_tou_savings=tou_savings,
@@ -108,9 +111,23 @@ async def simulate_pv_ess_project(
             **request.financial_params.model_dump() 
         )
         fin_out = run_financial_simulation(fin_input)
+
+        # print(f"金融数据:{fin_out}")
+        # print(f"物理数据:{phys_out}")
         
         return FullQuoteResponse(physics_result=phys_out, finance_result=fin_out)
-        
+    # 🌟 进阶捕获 1：专门捕获第三方 API 的 HTTP 错误 (如果你用的是 requests)
+    except requests.exceptions.HTTPError as e:
+        # 这样可以直接提取气象局服务器返回的真实错误 JSON
+        error_detail = f"气象 API 拒绝请求, 状态码: {e.response.status_code}, 详情: {e.response.text}"
+        print(f"🔴 [外部 API 错误] {error_detail}") # 打印到后端控制台
+        raise HTTPException(status_code=502, detail=error_detail) # 502 Bad Gateway 更符合语意    
     except Exception as e:
-        print(f"❌ 后端测算崩溃: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"模拟器运算失败: {str(e)}")
+        # 获取包含具体报错代码行数的完整追踪信息
+        error_trace = traceback.format_exc()
+        
+        # ⚠️ 核心原则：详细堆栈留在后端自己看，精简信息返回给前端
+        print(f"🔥 [致命异常崩溃] 完整堆栈如下:\n{error_trace}")
+        
+        # repr(e) 会比 str(e) 打印出异常的类型，比如 KeyError('temp') 而不只是 'temp'
+        raise HTTPException(status_code=500, detail=f"内部系统崩溃: {repr(e)}")
