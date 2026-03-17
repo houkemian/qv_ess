@@ -11,12 +11,11 @@ from app.db.database import engine, Base
 from app.modules.iam.models import User
 
 
-# 导入我们刚刚写好的模拟器路由
-from app.api.v1.simulation import router as simulation_router
 # 🌟 1. 必须导入 UserSettings 模型，否则 Base.metadata.create_all 看不到它！
 from app.models.user_settings import UserSettings 
 # 🌟 2. 导入我们刚刚写好的 settings 路由
 from app.api.v1.settings import router as settings_router
+from app.api.v1 import payment  # 🌟 新增：引入咱们写好的支付模块
 
 
 # 1. 初始化 FastAPI 应用，并配置专业的 Swagger 文档信息
@@ -63,8 +62,15 @@ app.include_router(
 app.include_router(
     locations_router, 
     prefix="/api/v1", 
-    tags=["Simulation"],
+    tags=["locations"],
     dependencies=[Depends(get_current_user_payload)])
+
+app.include_router(
+    payment.router, 
+    prefix="/api/v1/payment", 
+    tags=["Payment - Stripe 支付"],
+    dependencies=[Depends(get_current_user_payload)])
+
 
 # 4. 健康检查探针 (Health Check)
 # 用于云服务器自动检测该引擎是否存活
