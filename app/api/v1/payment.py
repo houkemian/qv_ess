@@ -51,11 +51,8 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     sig_header = request.headers.get("stripe-signature")
     
     # 🌟 将这里的 whsec_... 替换成你刚刚在 Stripe 后台复制的真实 Signing secret！
-<<<<<<< HEAD
-    endpoint_secret = "whsec_5l3pJRARAgzhODFazyeFf6OMkef6uUNN" 
-=======
+
     endpoint_secret = STRIPE_WEBHOOK_SECRET 
->>>>>>> c728dc5... feat: init PV+ESS Quote Master MVP
     
     try:
         # 核心防伪校验：验证这通请求真的是 Stripe 发来的，而不是黑客伪造的
