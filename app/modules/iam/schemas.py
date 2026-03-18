@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
 # 请求发送验证码
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+    language: str = "en"
 
 # 提交验证码并重置密码
 class ResetPasswordRequest(BaseModel):

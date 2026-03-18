@@ -59,7 +59,7 @@ async def request_password_reset(req: ForgotPasswordRequest, background_tasks: B
     user.reset_code_expire = datetime.utcnow() + timedelta(minutes=15)
     db.commit()
 
-    background_tasks.add_task(send_otp_email, user.email, code)
+    background_tasks.add_task(send_otp_email, user.email, code, req.language)
 
     return {"message": "如果该邮箱已注册，验证码已发送。"}
 
